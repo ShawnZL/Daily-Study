@@ -8,7 +8,7 @@ git init
 
 .git 是 Git 的版本库
 
-## 添加问价到Git仓库
+## 添加文件到Git仓库
 
 ```
 git add <file>
