@@ -157,7 +157,7 @@ int socket(int domain, int type, int protocol)
 
 ##### SOCK_STREAM
 
-这个是面向连接的套接字，一一对应，可靠、按序传递、基于字节的缅想连接的数据传输方式的套接字。
+这个是面向连接的套接字，一一对应，可靠、按序传递、基于字节的面向连接的数据传输方式的套接字。
 
 ##### SOCK_DGRAM
 
@@ -205,3 +205,110 @@ struct in_addr {
 }
 ```
 
+具体含义见POSIX，是为UNIX系统操作系统设立的标准
+
+### sin_family
+
+| 地址族（Address Family） | 含义             |
+| :----------------------- | ---------------- |
+| AF_INET                  | IPv4             |
+| AF_INET6                 | IPv6             |
+| AF_LOCAL                 | UNIX协议的地址族 |
+
+### sin_port
+
+16位端口号
+
+### sin_addr
+
+32位IP地址信息，且也以网络字节序保存，结构体
+
+### sin_zore
+
+只是为使结构体sockaddr_in的大小和sockaddr结构体保持一致而插入的成员。必须填充为0。
+
+## sockaddr
+
+```
+struct sockaddr
+{
+	sa_family_t sin_family;  // 地址族
+	char 				sa_data[14]; // 地址信息
+}
+```
+
+sa_data保存的地址信息中需包含IP地址和端口号，剩余部分填充0。但是这包含地址信息来说十分麻烦，因此有了新的结构体sockaddr_in。
+
+## 3.3 网络字节序与地址变换
+
+### 字节序与网络字节序
+
+大端序：高位字节存放在低位地址
+
+小端序：高位字节存放在高位地址
+
+**网络统一字节序为大端序**
+
+### 字节序转换
+
+在填充`sockadr_in`结构体前将数据转换为网络字节序。
+
+```
+unsigned short htons(unsigned short);
+unsigned short ntohs(unsigned short);
+unsigned long htonl(unsigned long);
+unsigned long ntohl(unsigned long);
+```
+
+htons 中`h`代表主机host；`n`代表网络network
+
+## 3.4 网络地址的初始化与分配
+
+将IP地址转换为4字节整数型数据。（Dotted Decimal Notation）
+
+将字符串形式的IP地址转换为32位整数型数据
+
+```
+#include <arpa/inet.h>
+
+in_addr_t inet_addr(const char * string);
+//成功返回32位大端序整数型值，失败时返回INADDR_NONE。
+
+int inet_aton(const char * string, struct in_addr * addr);
+// string 需要转换地址信息，addr，保存地址的变量信息
+//成功时返回 1（true），失败时返回0（false）
+```
+
+在实际情况下，调用`inet_addr`需要将转换后的IP地址带入`sockaddr_in`结构体中声明`in_addr`结构体中。`inet_aton`函数则不需要这个过程。
+
+**与`inet_aton`函数正好相反的函数，将网络字节序整数型IP地址转换为我们熟悉的字符串形式。**
+
+```
+#include <arpa/inet.h>
+char * inet_ntoa(struct in_addr adr);
+// 成功返回转换的字符串地址值，失败时返回-1。
+```
+
+但是这个函数返回的char指针，意味着这个函数自动将申请了内存空间保存字符串，调用完毕后马上复制到其他空间。因为若再次调用inet_ntoa函数，可能会覆盖之前的字符串信息。
+
+### 网络地址初始化
+
+套接字创建过程中常见的网络地址信息初始化方法
+
+```
+struct sockaddr_in addr;
+char * serv_ip = "211.217.168.13"; //声明IP地址字符串
+char * serv_port = "9190";         //声明端口号字符串
+memset(&addr, 0, sizeof(addr));		 //结果体变量addr的所有成员初始化为 0
+addr.sin_family = AF_INET;         //指定地址族
+addr.sin_addr.s_addr = inet_addr(serv_ip); //基于字符串的IP地址初始化
+addr.sin_port = htons(atoi(serv_port));		 //基于字符串的端口号初始化
+```
+
+### INADDR_ANY
+
+每次创建服务器端套接字都要输入IP地址繁琐，`INADDR_ANY` 分配服务器端的IP地址自动获取运行服务器端的计算机IP地址。如果一个主机分配了多个IP地址，则只要端口号一致，就可以从不同的IP地址接受数据。
+
+```
+addr.sin_addr.s_addr = htonl(INADDR_ANY);
+```
