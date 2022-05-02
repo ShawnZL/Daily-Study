@@ -576,3 +576,66 @@ $ git tag -a <tagname> -m "information" 1094adb
 - 命令`git push origin --tags`可以推送全部未推送过的本地标签；
 - 命令`git tag -d <tagname>`可以删除一个本地标签；
 - 命令`git push origin :refs/tags/<tagname>`可以删除一个远程标签。
+
+# .gitignore
+
+![git_picture](https://img-blog.csdnimg.cn/20200411110044421.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dudmFsZW50aW4=,size_16,color_FFFFFF,t_70#pic_center)
+
+在工程中，并不是所有的文件都需要保存到版本库中。在`Git`工作区的根目录下创建一个特殊的`.gitignore`文件，然后把要忽视的文件名填写进去，Git就会自动忽视这些文件或目录
+
+```
+* 空格不匹配任意文件，可作为分隔符，可用反斜杠转义
+* 开头的文件标识注释，可以使用反斜杠进行转义
+* ! 开头的模式标识否定，该文件将会再次被包含，如果排除了该文件的父级目录，则使用 ! 也不会再次被包含。可以使用反斜杠进行转义
+* / 结束的模式只匹配文件夹以及在该文件夹路径下的内容，但是不匹配该文件
+* / 开始的模式匹配项目跟目录
+* 如果一个模式不包含斜杠，则它匹配相对于当前 .gitignore 文件路径的内容，如果该模式不在 .gitignore 文件中，则相对于项目根目录
+* ** 匹配多级目录，可在开始，中间，结束
+* ? 通用匹配单个字符
+* * 通用匹配零个或多个字符
+* [] 通用匹配单个字符列表
+
+bin/: 忽略当前路径下的bin文件夹，该文件夹下的所有内容都会被忽略，不忽略 bin 文件
+/bin: 忽略根目录下的bin文件
+/*.c: 忽略 cat.c，不忽略 build/cat.c
+debug/*.obj: 忽略 debug/io.obj，不忽略 debug/common/io.obj 和 tools/debug/io.obj
+**/foo: 忽略/foo, a/foo, a/b/foo等
+a/**/b: 忽略a/b, a/x/b, a/x/y/b等
+!/bin/run.sh: 不忽略 bin 目录下的 run.sh 文件
+*.log: 忽略所有 .log 文件
+config.php: 忽略当前路径的 config.php 文件
+```
+
+`.gitignore` 只能忽略那些原来没有track的文件，如果某些文件已经被纳入了版本管理，则修改`.gitignore`是无效的
+
+解决方法就是先将本地缓存删除（修改为未track状态），然后提交
+
+```
+git rm -r --cached .
+git add .
+git commit -m 'update .gitignore'
+```
+
+如果你想强制添加改文件，可以使用-f强制添加到`Git`
+
+```
+git add -f App.class
+```
+
+如果你发现可能是`.gitignore`写的有问题，需要找出到底哪一个规则写错了，可以使用`git check-ignore`命令检查
+
+```
+git check-ignore -v App.class
+```
+
+## 个人系统中忽视所有仓库的特定文件
+
+例如 `.DS_Store` 文件
+
+```
+# 将 . DS_Store 加入全局的 .gitignore 文件，执行命令：
+echo .DS_Store >> ~/.gitignore_global
+# 将这个全局的 .gitignore 文件加入Git的全局config文件中，执行命令：
+git config --global core.excludesfile ~/.gitignore_global
+```
+
