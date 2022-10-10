@@ -27,7 +27,7 @@ clok is just a way of assigning a number to an event, where the number is though
 
 ### Two conditions hold
 
-C1. If a and b are events in process P~, and a comes before b, then Ci(a) < Ci(b).
+C1. If a and b are events in process Pi, and a comes before b, then Ci(a) < Ci(b).
 
 C2. If a is the sending of a message by process Pi and b is the receipt of that message by process Pj, then Ci(a) < Cj(b).
 
@@ -39,11 +39,11 @@ to guarantee that the system of clocks satisfies C1 and C2
 
 C1: **IR1**: `Each process Pi increments Ci between any two successive events.`
 
-任何一个进程Pi在两个成功事件之间递增Ci
+**任何一个进程Pi在两个成功事件之间递增Ci**
 
 C2: message `m` carry the Timestamp `Tm` which equals the time at which the message was sent. **IR2**: `(a) If event a is the sending of a message m by process Pi,then the message m contains a timestamp Tm = Ci(a). (b) Upon receiving a message m, process Pi sets Ci greater than or equal to its present value and greater than Tm.`
 
-Ci+1 = max(Ci, Tm) + 1
+**Ci+1 = max(Ci, Tm) + 1**
 
 # Ordering the Events Totally
 
